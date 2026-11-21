@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.mahmudurah.sigenergy",
+  "name": "Sigenergy",
+  "version": "1.0.0",
+  "author": "mahmudurah",
+  "license": "MIT",
+  "description": "Live Sigenergy solar generation, home load, grid power, and battery SoC bar widget and popup card over local Modbus TCP",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Sigenergy",
+    "description": "Live solar generation, home load, and battery SoC card",
+    "category": "Energy",
+    "aliases": [
+      "solar",
+      "battery",
+      "sigen",
+      "sigenergy",
+      "energy"
+    ],
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "host": "",
+      "port": 502,
+      "refreshSeconds": 15,
+      "barMode": "full"
+    },
+    "schema": [
+      {
+        "key": "host",
+        "type": "string",
+        "label": "Sigenergy inverter / controller IP address",
+        "defaultValue": ""
+      },
+      {
+        "key": "port",
+        "type": "number",
+        "label": "Modbus TCP port",
+        "defaultValue": 502
+      },
+      {
+        "key": "refreshSeconds",
+        "type": "number",
+        "label": "Background refresh interval (seconds)",
+        "defaultValue": 15
+      },
+      {
+        "key": "barMode",
+        "type": "string",
+        "label": "Bar display mode: full, soc, or icon",
+        "defaultValue": "full"
+      }
+    ]
+  }
+}
