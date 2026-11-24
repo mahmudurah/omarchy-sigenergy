@@ -7,6 +7,7 @@ A native [Omarchy](https://omarchy.org) shell bar widget and popup card for **Si
 ## Features
 
 - **Live bar pill:** Shows live **Solar generation** (automatically appears whenever PV > 0 W), **Home load**, and **Battery State of Charge** with a distinct home-battery icon (`󱤁` / `󱤃` while charging).
+- **Color-coded Battery SoC:** Battery icon, percentage, and progress bar dynamically shift by charge level — **Red** (`< 20%`), **Amber** (`20% – 50%`), and **Green** (`> 50%`).
 - **Theme-native popup card:** Follows your active Omarchy theme colors, fonts, corner radius, and motion settings live.
 - **Live power flow tiles:** Solar (PV), Home Load, and Grid (with Importing / Exporting / Balanced state).
 - **Today's energy breakdown:** Solar generated, Home load, Battery charged & discharged, Net Grid balance, and Battery health (SoH % + average cell temperature).
