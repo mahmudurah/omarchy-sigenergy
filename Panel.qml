@@ -18,7 +18,7 @@ Panel {
   }
   readonly property int refreshSeconds: Math.max(5, parseInt(setting("refreshSeconds", 15), 10) || 15)
   readonly property string barMode: String(setting("barMode", "full") || "full")
-  readonly property real openPanelIndicatorWidth: !button.vertical ? button.labelWidth : 0
+  readonly property real openPanelIndicatorWidth: !button.vertical ? barRow.implicitWidth : 0
 
   readonly property string scriptPath: {
     var url = String(Qt.resolvedUrl("scripts/poll.py"))
@@ -42,19 +42,25 @@ Panel {
   readonly property bool batteryCharging: hasData && essPowerW > 30
   readonly property bool batteryDischarging: hasData && essPowerW < -30
   readonly property bool solarGenerating: hasData && pvPowerW >= 30
-  readonly property bool lowBattery: hasData && socPct <= 15
+  readonly property bool lowBattery: hasData && socPct < 20
 
   readonly property color fgColor: root.bar ? root.bar.foreground : Commons.Color.foreground
   readonly property color accentColor: Commons.Color.accent
   readonly property color urgentColor: Commons.Color.urgent
   readonly property color mutedColor: Qt.darker(fgColor, 1.4)
 
-  readonly property color batteryBarColor: {
-    if (needsSetup || (offline && !hasData)) return mutedColor
-    if (lowBattery) return urgentColor
-    if (batteryCharging) return accentColor
-    return fgColor
+  readonly property color socLowColor: "#e5534b"
+  readonly property color socMidColor: "#e5a93c"
+  readonly property color socHighColor: "#4cc38a"
+
+  readonly property color socColor: {
+    if (needsSetup || !hasData) return mutedColor
+    if (socPct < 20) return socLowColor
+    if (socPct <= 50) return socMidColor
+    return socHighColor
   }
+
+  readonly property color batteryBarColor: socColor
 
   function formatPower(watts, signed) {
     var w = Number(watts)
@@ -88,18 +94,12 @@ Panel {
     return "󱤁"
   }
 
-  function barText() {
+  function barBatteryText() {
     var battIcon = homeBatteryGlyph()
     if (button.vertical || barMode === "icon") return battIcon
     if (needsSetup) return battIcon + " Setup"
     if (!hasData) return battIcon + (offline ? " off" : " …")
-    var socStr = Commons.I18n.formatNumber(Math.round(socPct), 0) + "%"
-    if (barMode === "soc") return battIcon + " " + socStr
-    var parts = []
-    if (pvPowerW > 0) parts.push("󰖙 " + formatPowerCompact(pvPowerW))
-    parts.push("󰋜 " + formatPowerCompact(homeLoadW))
-    parts.push(battIcon + " " + socStr)
-    return parts.join("  ")
+    return battIcon + " " + Commons.I18n.formatNumber(Math.round(socPct), 0) + "%"
   }
 
   function heroStatusLine() {
@@ -217,15 +217,56 @@ Panel {
     id: button
     anchors.fill: parent
     bar: root.bar
-    text: root.barText()
+    labelVisible: false
+    hasVisualContent: true
     fontSize: Style.bar.iconFont
     horizontalMargin: 7
+    fixedWidth: vertical ? -1 : Math.max(Style.bar.iconSlot, barRow.implicitWidth + scaledHorizontalMargin * 2)
+    fixedHeight: vertical ? Style.bar.iconSlot : -1
     tooltipText: ""
 
     onPressed: function(b) {
       if (b === Qt.RightButton) root.cycleBarMode()
       else if (b === Qt.MiddleButton) root.refresh()
       else root.toggle()
+    }
+
+    Row {
+      id: barRow
+      anchors.centerIn: parent
+      scale: button.pressScale
+      spacing: Style.space(8)
+
+      Text {
+        visible: !button.vertical && root.barMode === "full" && root.hasData && root.pvPowerW > 0
+        textFormat: Text.PlainText
+        text: "󰖙 " + root.formatPowerCompact(root.pvPowerW)
+        font.family: button.fontFamily
+        font.pixelSize: button.fontSize
+        color: button.foreground
+        renderType: Text.NativeRendering
+      }
+
+      Text {
+        visible: !button.vertical && root.barMode === "full" && root.hasData
+        textFormat: Text.PlainText
+        text: "󰋜 " + root.formatPowerCompact(root.homeLoadW)
+        font.family: button.fontFamily
+        font.pixelSize: button.fontSize
+        color: button.foreground
+        renderType: Text.NativeRendering
+      }
+
+      Text {
+        textFormat: Text.PlainText
+        text: root.barBatteryText()
+        font.family: button.fontFamily
+        font.pixelSize: button.fontSize
+        color: root.hasData ? root.socColor : button.foreground
+        renderType: Text.NativeRendering
+
+        Behavior on color { ColorAnimation { duration: Style.duration(200) } }
+      }
     }
   }
 
@@ -315,7 +356,7 @@ Panel {
             id: heroPercent
             textFormat: Text.PlainText
             text: root.hasData ? (Commons.I18n.formatNumber(root.socPct, 1) + "%") : "—"
-            color: root.lowBattery ? root.urgentColor : root.fgColor
+            color: root.hasData ? root.socColor : root.fgColor
             font.family: root.bar ? root.bar.fontFamily : Style.font.family
             font.pixelSize: Style.font.displayLarge
             font.bold: true
